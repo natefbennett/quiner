@@ -1,31 +1,15 @@
-
-'''
--- replace main() with this structure --
-
-int main( int argc, char *argv[] ) {
-    if ( argc == 2 && *argv[1] == 'q'  ) {
-        {c_program_section}
-        {c_quine_section}
-    } else {
-        {c_program_section}
-    }
-    return 0;
-}
-'''
+# Author:    Nate Bennett
+# Date:      1/16/22
+# File:      quiner.py
+# License:   MIT
+#
+# This python script to gives a basic C program the ability to self reproduce! 
 
 import sys
 import re
 
-
-def GetInMain( s ):
-    stack = []
-    in_main = ''
-    for c in s:
-        if c == '{':
-            pass
-        elif c == '}':
-            pass
-
+# take in an iterable of bytes and output a string
+# returned string is a valid C style array of bytes
 def CStyleByteArray(byte_list):
     
     byte_array = 'const unsigned char data[] = {'
@@ -46,7 +30,7 @@ f = open(sys.argv[1])
 c_src = f.read()
 f.close()
 
-# code to inject into c program
+# quine section to inject into c program
 c_quine_section = \
 '''
 printf ("const unsigned char data[] = {");
@@ -64,6 +48,7 @@ for ( i=0 ; i<sizeof(data) ; i++ ) {
     putchar (data[i]);
 }
 '''
+# new main() components to inject
 c_new_if = 'main( int argc, char *argv[] ){\nif ( argc == 2 && *argv[1] == \'q\') {'
 c_new_else = '} else {'
 c_new_end = 'return 0;\n}\n}'
@@ -82,10 +67,11 @@ c_new_in_main = f'''
     return 0;
 '''
 
-# inject new main funtion into program
+# inject new main() function into program
 c_new_src = re.sub( re.escape(c_src_in_main), c_new_in_main, c_new_src )
 
 # get byte representation of new quine program
 c_byte_array = CStyleByteArray(bytearray(c_new_src.encode())) + '\n'
 
+# append c style byte array to top of file and print to stdout
 print(c_byte_array + c_new_src)
